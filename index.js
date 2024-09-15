@@ -1,5 +1,8 @@
 // import express
 import express from "express";
+import pool from "./db.js";
+import { OK, INTERNAL_SERVER } from "./const.js";
+import rootRoutes from "./src/routes/root.router.js";
 
 // tao doi tuong express
 const app = express();
@@ -7,6 +10,8 @@ const app = express();
 // them middleware de doc data json
 app.use(express.json());
 
+// import rootRoutes
+app.use(rootRoutes);
 // define port cho backend chay
 // params1: define port backend
 // params 2: callback function
@@ -19,13 +24,6 @@ app.get("/test", (req, res) => {
   res.send("test api");
 });
 
-// demo get params tu url
-app.post("/users/:id/:Hoten", (req, res) => {
-  let params = req.params;
-  let { id, Hoten } = params;
-  let body = req.body;
-  res.send({ id, Hoten });
-});
 app.get("/test", (req, res) => {
   res.send("test api");
 });
