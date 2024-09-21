@@ -3,12 +3,16 @@ import express from "express";
 import pool from "./db.js";
 import { OK, INTERNAL_SERVER } from "./const.js";
 import rootRoutes from "./src/routes/root.router.js";
+import cors from "cors";
 
 // tao doi tuong express
 const app = express();
 
 // them middleware de doc data json
 app.use(express.json());
+
+// them middleware cors
+app.use(cors());
 
 // import rootRoutes
 app.use(rootRoutes);

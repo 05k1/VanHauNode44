@@ -1,14 +1,34 @@
 import _sequelize from 'sequelize';
 const { Model, Sequelize } = _sequelize;
 
-export default class like_res extends Model {
+export default class video extends Model {
   static init(sequelize, DataTypes) {
   return super.init({
-    like_res_id: {
+    video_id: {
       autoIncrement: true,
       type: DataTypes.INTEGER,
       allowNull: false,
       primaryKey: true
+    },
+    video_name: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    thumbnail: {
+      type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
+    views: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    source: {
+      type: DataTypes.STRING(255),
+      allowNull: true
     },
     user_id: {
       type: DataTypes.INTEGER,
@@ -18,21 +38,17 @@ export default class like_res extends Model {
         key: 'user_id'
       }
     },
-    res_id: {
+    type_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
-        model: 'restaurant',
-        key: 'res_id'
+        model: 'video_type',
+        key: 'type_id'
       }
-    },
-    date_like: {
-      type: DataTypes.DATE,
-      allowNull: true
     }
   }, {
     sequelize,
-    tableName: 'like_res',
+    tableName: 'video',
     timestamps: false,
     indexes: [
       {
@@ -40,7 +56,7 @@ export default class like_res extends Model {
         unique: true,
         using: "BTREE",
         fields: [
-          { name: "like_res_id" },
+          { name: "video_id" },
         ]
       },
       {
@@ -51,10 +67,10 @@ export default class like_res extends Model {
         ]
       },
       {
-        name: "res_id",
+        name: "type_id",
         using: "BTREE",
         fields: [
-          { name: "res_id" },
+          { name: "type_id" },
         ]
       },
     ]
