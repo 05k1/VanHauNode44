@@ -1,7 +1,12 @@
+import { createToken } from "../config/jwt.js";
+import transporter from "../config/transporter.js";
 import sequelize from "../models/connect.js";
 import initModels from "../models/init-models.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const model = initModels(sequelize);
 
@@ -35,9 +40,22 @@ const register = async (req, res, next) => {
       pass_word: bcrypt.hashSync(pass, 10),
     });
 
-    return res.status(200).json({
-      message: "Dang ky thanh cong",
-      data: userNew,
+    // Cau hinh info email
+    const mailOption = {
+      from: process.env.MAIL_USER,
+      to: email,
+      subject: "Welcome to Our Service",
+      text: `Hello ${fullName}. Best Regards`,
+    };
+    // gui mail
+    transporter.sendMail(mailOption, (err, info) => {
+      if (err) {
+        res.status(500).json({ message: "Send email err" });
+      }
+      return res.status(200).json({
+        message: "Dang ky thanh cong",
+        data: userNew,
+      });
     });
   } catch (error) {
     return res.status(500).json({ message: "error" });
@@ -82,11 +100,12 @@ const login = async (req, res) => {
     // param 1: tao payload va luu vao token
     // param 2: key de tao token
     // param 3: setting lifetime cua token va thuat toan de tao token
-    let accessToken = jwt.sign({ payload }, "NODE44", {
-      algorithm: "HS256",
-      expiresIn: "1d",
-    });
-    res.status(200).json({
+    // let accessToken = jwt.sign({ payload }, "NODE44", {
+    //   algorithm: "HS256",
+    //   expiresIn: "1d",
+    // });
+    let accessToken = createToken({ userId: user.user_id });
+    return res.status(200).json({
       message: "login successfully",
       data: {
         token: accessToken,
@@ -97,4 +116,36 @@ const login = async (req, res) => {
   }
 };
 
-export { register, login };
+const loginFacebook = async (req, res) => {
+  try {
+    // B1: lay id email name tu request
+    // B2: check id (app-face-id trong db)
+    // B2.1 neu co id => tao access token gui cho FE
+    // B2.2
+
+    let { id, email, name } = req.body;
+    let user = await model.users.findOne({
+      where: { face_app_id: id },
+    });
+    if (!user) {
+      let newUser = {
+        full_name: name,
+        face_app_id: id,
+        email,
+      };
+      user = await model.users.create(newUser);
+    }
+    let accessToken = createToken({ userId: user.user_id });
+    return res.status(200).json({
+      message: "login successfully",
+      data: {
+        token: accessToken,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "error" });
+  }
+};
+
+export { register, login, loginFacebook };
