@@ -1,9 +1,9 @@
-import { createToken } from "../config/jwt.js";
+import { createRefToken, createToken } from "../config/jwt.js";
 import transporter from "../config/transporter.js";
 import sequelize from "../models/connect.js";
 import initModels from "../models/init-models.js";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+// import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -104,7 +104,27 @@ const login = async (req, res) => {
     //   algorithm: "HS256",
     //   expiresIn: "1d",
     // });
-    let accessToken = createToken({ userId: user.user_id });
+    let accessToken = createToken(payload);
+    let refreshToken = createRefToken(payload);
+    console.log(refreshToken);
+    await model.users.update(
+      {
+        refresh_token: refreshToken,
+      },
+      {
+        where: {
+          user_id: user.user_id,
+        },
+      }
+    );
+
+    //luu refresh token vao cookie
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true, // cookie khong the truy cap tu js
+      secure: false, // chay localhost
+      sameSite: "Lax", // de dam bao cookie duoc gui trong cac domain khac nhau
+      maxAge: 7 * 24 * 60 * 60 * 1000, // thoi gian ton tai cookie trong browser
+    });
     return res.status(200).json({
       message: "login successfully",
       data: {
@@ -136,6 +156,7 @@ const loginFacebook = async (req, res) => {
       user = await model.users.create(newUser);
     }
     let accessToken = createToken({ userId: user.user_id });
+
     return res.status(200).json({
       message: "login successfully",
       data: {
@@ -148,4 +169,29 @@ const loginFacebook = async (req, res) => {
   }
 };
 
-export { register, login, loginFacebook };
+const extendToken = async (req, res) => {
+  try {
+    // lay refresh tu cookie request
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      returnres.status(401).json({ message: "unauthorized" });
+    }
+
+    const checkRefToken = await model.users.findOne({
+      where: {
+        refresh_token: refreshToken,
+      },
+    });
+
+    if (!refreshToken) {
+      return res.status(401);
+    }
+
+    const newToken = createToken({ userId: checkRefToken.user_id });
+    return res.status(200).json({ message: "success", data: newToken });
+  } catch (error) {
+    return res.status(500).json({ message: "erorr" });
+  }
+};
+
+export { register, login, loginFacebook, extendToken };

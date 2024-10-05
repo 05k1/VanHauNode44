@@ -1,18 +1,26 @@
 // import express
 import express from "express";
-import pool from "./db.js";
-import { OK, INTERNAL_SERVER } from "./const.js";
+// import pool from "./db.js";
+// import { OK, INTERNAL_SERVER } from "./const.js";
 import rootRoutes from "./src/routes/root.router.js";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 // tao doi tuong express
 const app = express();
 
+app.use(
+  cors({
+    origin: "http://localhost:3000", // cap quyen cho frontend
+    credentials: true, // cho phep fe lay cookie va luu vao cookie
+  })
+);
+
 // them middleware de doc data json
 app.use(express.json());
+app.use(cookieParser());
 
 // them middleware cors
-app.use(cors());
 
 // import rootRoutes
 app.use(rootRoutes);

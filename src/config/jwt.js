@@ -8,7 +8,14 @@ dotenv.config();
 export const createToken = (data) => {
   return jwt.sign({ payload: data }, process.env.ACCESS_TOKEN_KEY, {
     algorithm: "HS256",
-    expiresIn: "1d",
+    expiresIn: "10s",
+  });
+};
+
+export const createRefToken = (data) => {
+  return jwt.sign({ payload: data }, process.env.REFRESH_TOKEN, {
+    algorithm: "HS256",
+    expiresIn: "7d",
   });
 };
 
