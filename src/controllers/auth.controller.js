@@ -1,4 +1,9 @@
-import { createRefToken, createToken } from "../config/jwt.js";
+import {
+  createRefToken,
+  createRefTokenAsyncKey,
+  createToken,
+  createTokenAsyncKey,
+} from "../config/jwt.js";
 import transporter from "../config/transporter.js";
 import sequelize from "../models/connect.js";
 import initModels from "../models/init-models.js";
@@ -174,7 +179,7 @@ const extendToken = async (req, res) => {
     // lay refresh tu cookie request
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
-      returnres.status(401).json({ message: "unauthorized" });
+      return res.status(401).json({ message: "unauthorized" });
     }
 
     const checkRefToken = await model.users.findOne({
@@ -187,11 +192,85 @@ const extendToken = async (req, res) => {
       return res.status(401);
     }
 
-    const newToken = createToken({ userId: checkRefToken.user_id });
+    const newToken = createTokenAsyncKey({ userId: checkRefToken.user_id });
     return res.status(200).json({ message: "success", data: newToken });
   } catch (error) {
     return res.status(500).json({ message: "erorr" });
   }
 };
 
-export { register, login, loginFacebook, extendToken };
+const loginAsyncKey = async (req, res) => {
+  try {
+    // B1: lay eamil va pass_word tu body req
+
+    // B2: check user thong qua email (get user tu db)
+
+    // Neu khong co user => ra erorr user not found
+
+    // Neu co user => check pass_word
+
+    //    Neu pass_word ko trung nhau => pass_word is wrong
+
+    //   Neu pass_word trung nhau => tao access token
+
+    let { email, pass_word } = req.body;
+    let user = await model.users.findOne({
+      where: {
+        email,
+      },
+    });
+    if (!user) {
+      return res.status(400).json({ message: "Email is wrong" });
+    }
+
+    let checkPass = bcrypt.compareSync(pass_word, user.pass_word);
+
+    if (!checkPass) {
+      return res.status(400).json({ message: "password is wrong" });
+    }
+    let payload = {
+      userId: user.user_id,
+    };
+    // access token, refresh token
+    // Tao token
+    // Func sign jsonwebtoken
+    // param 1: tao payload va luu vao token
+    // param 2: key de tao token
+    // param 3: setting lifetime cua token va thuat toan de tao token
+    // let accessToken = jwt.sign({ payload }, "NODE44", {
+    //   algorithm: "HS256",
+    //   expiresIn: "1d",
+    // });
+    let accessToken = createTokenAsyncKey(payload);
+    let refreshToken = createRefTokenAsyncKey(payload);
+    console.log(refreshToken);
+    await model.users.update(
+      {
+        refresh_token: refreshToken,
+      },
+      {
+        where: {
+          user_id: user.user_id,
+        },
+      }
+    );
+
+    //luu refresh token vao cookie
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true, // cookie khong the truy cap tu js
+      secure: false, // chay localhost
+      sameSite: "Lax", // de dam bao cookie duoc gui trong cac domain khac nhau
+      maxAge: 7 * 24 * 60 * 60 * 1000, // thoi gian ton tai cookie trong browser
+    });
+    return res.status(200).json({
+      message: "login successfully",
+      data: {
+        token: accessToken,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "error" });
+  }
+};
+
+export { register, login, loginFacebook, extendToken, loginAsyncKey };
