@@ -1,7 +1,7 @@
-import initModels from "./../models/init-models.js";
-import sequelize from "./../models/connect.js";
+import initModels from "../../models/init-models.js";
+import sequelize from "../../models/connect.js";
 import sinon from "sinon";
-import { getListVideo } from "./../controllers/video.controller.js";
+import { getListVideo } from "../../controllers/video.controller.js";
 import { expect } from "chai";
 import { afterEach } from "mocha";
 
@@ -47,5 +47,7 @@ describe("getVideos", () => {
     await getListVideo(req, res);
 
     expect(res.status.calledWith(200)).to.be.true;
+    // kiem tra dung data
+    expect(res.json.calledWith(videos)).to.be.true;
   });
 });

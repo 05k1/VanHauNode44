@@ -10,6 +10,7 @@ import initModels from "../models/init-models.js";
 import bcrypt from "bcrypt";
 // import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import crypto from "crypto";
 
 dotenv.config();
 
@@ -273,4 +274,94 @@ const loginAsyncKey = async (req, res) => {
   }
 };
 
-export { register, login, loginFacebook, extendToken, loginAsyncKey };
+const forgotPass = async (req, res) => {
+  try {
+    let { email } = req.body;
+    // kiem tra email co ton tai trong db khong
+    let checkEmail = await model.users.findOne({
+      where: {
+        email,
+      },
+    });
+
+    if (!checkEmail) {
+      return res.status(400).json({ message: "Email is wrong" });
+    }
+
+    // tao code
+    let randomCode = crypto.randomBytes(5).toString("hex");
+    // tao bien luu expired code
+    let expired = new Date(new Date().getTime() + 60 * 60 * 100);
+    // luu code vao db
+    await model.code.create({
+      code: randomCode,
+      expired: new Date(),
+    });
+
+    // send mail
+    const mailOption = {
+      from: process.env.MAIL_USER,
+      to: email,
+      subject: "Ma xac thuc",
+      text: `Forgot Password`,
+      html: `<h1>${randomCode}</h1>`,
+    };
+    // gui mail
+    transporter.sendMail(mailOption, (err, info) => {
+      if (err) {
+        res.status(500).json({ message: "Send email err" });
+      }
+      return res.status(200).json({
+        message: "Please check email",
+      });
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "error api fotgot password" });
+  }
+};
+
+const changePassword = async (req, res) => {
+  try {
+    let { code, email, newPass } = req.body;
+    let checkCode = await model.code.findOne({
+      where: {
+        code,
+      },
+    });
+
+    if (!checkCode) {
+      return res.status(400).json({ message: "code is wrong" });
+    }
+    let checkEmail = await model.users.findOne({
+      where: { email },
+    });
+
+    if (!checkEmail) {
+      return res.status(400).json({ message: "email is wrong" });
+    }
+
+    let hashNewPass = bcrypt.hashSync(newPass, 10);
+    checkEmail.pass_word = hashNewPass;
+    await checkEmail.save();
+
+    // remove code sau khi change thanh cong
+    await model.code.destroy({
+      where: {
+        code,
+      },
+    });
+    return res.status(200).json({ message: "Change pass success" });
+  } catch (error) {
+    return res.status(500).json({ message: "error api change password" });
+  }
+};
+
+export {
+  register,
+  login,
+  loginFacebook,
+  extendToken,
+  loginAsyncKey,
+  forgotPass,
+  changePassword,
+};
