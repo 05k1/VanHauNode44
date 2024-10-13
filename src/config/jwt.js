@@ -14,14 +14,14 @@ dotenv.config();
 export const createToken = (data) => {
   return jwt.sign({ payload: data }, process.env.ACCESS_TOKEN_KEY, {
     algorithm: "HS256",
-    expiresIn: "10s",
+    expiresIn: "10m",
   });
 };
 
 export const createTokenAsyncKey = (data) => {
   return jwt.sign({ payload: data }, accessTokenPrivateKey, {
     algorithm: "RS256",
-    expiresIn: "10s",
+    expiresIn: "10m",
   });
 };
 

@@ -11,27 +11,33 @@ import bcrypt from "bcrypt";
 // import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import crypto from "crypto";
+import { PrismaClient } from "@prisma/client";
+import speakeasy from "speakeasy"; // tao secret key QR
 
 dotenv.config();
 
 const model = initModels(sequelize);
+const prisma = new PrismaClient();
 
 const register = async (req, res, next) => {
   try {
     // B1: nhan du lieu tu FE
     const { fullName, email, pass } = req.body;
-    console.log({ fullName, email, pass });
 
     // Buoc 2: Ktra email da ton tai chua
     // Neu ton tai tra loi Tai khoan da ton tai
     // Neu chua ton tai di tiep
 
-    const userExist = await model.users.findOne({
+    // const userExist = await model.users.findOne({
+    //   where: {
+    //     email: email,
+    //   },
+    // });
+    const userExist = await prisma.users.findFirst({
       where: {
-        email: email,
+        email,
       },
     });
-    console.log({ userExist });
     if (userExist) {
       return res.status(400).json({
         message: `Tai khoan da ton tai`,
@@ -40,10 +46,21 @@ const register = async (req, res, next) => {
     }
 
     // B3: them nguoi dung moi vao DB
-    const userNew = await model.users.create({
-      full_name: fullName,
-      email: email,
-      pass_word: bcrypt.hashSync(pass, 10),
+    // const userNew = await model.users.create({
+    //   full_name: fullName,
+    //   email: email,
+    //   pass_word: bcrypt.hashSync(pass, 10),
+    // });
+
+    // tao secret cho login 2 lop
+    const secret = speakeasy.generateSecret({ length: 15 });
+    const userNew = await prisma.users.create({
+      data: {
+        full_name: fullName,
+        email,
+        pass_word: bcrypt.hashSync(pass, 10),
+        secret: secret.base32,
+      },
     });
 
     // Cau hinh info email

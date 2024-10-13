@@ -1,12 +1,16 @@
 import initModels from "../models/init-models.js";
 import sequelize from "../models/connect.js";
 import { Op } from "sequelize"; // operator: toán tử: LIKE, AND, IN, OR
+import { PrismaClient } from "@prisma/client";
 
 const model = initModels(sequelize);
 
+const prisma = new PrismaClient();
+
 const getListVideo = async (req, res) => {
   try {
-    let data = await model.video.findAll();
+    // let data = await model.video.findAll();
+    let data = await prisma.video.findMany();
     return res.status(200).json(data);
   } catch (error) {
     res.status(500).json({ message: "error" });
@@ -15,7 +19,8 @@ const getListVideo = async (req, res) => {
 
 const getType = async (req, res) => {
   try {
-    let data = await model.video_type.findAll();
+    // let data = await model.video_type.findAll();
+    let data = await prisma.video_type.findMany();
     res.status(200).json(data);
   } catch (error) {
     return res.status(500).json({ message: "error" });
