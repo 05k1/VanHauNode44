@@ -231,7 +231,7 @@ const loginAsyncKey = async (req, res) => {
 
     //   Neu pass_word trung nhau => tao access token
 
-    let { email, pass_word } = req.body;
+    let { email, pass_word, code } = req.body;
     let user = await model.users.findOne({
       where: {
         email,
@@ -245,6 +245,16 @@ const loginAsyncKey = async (req, res) => {
 
     if (!checkPass) {
       return res.status(400).json({ message: "password is wrong" });
+    }
+
+    // check code nhap duoc tu req
+    const verified = speakeasy.totp.verify({
+      secret: user.secret,
+      encoding: "base32",
+      token: code,
+    });
+    if (!verified) {
+      return res.status(400).json({ message: "Invalid 2FA" });
     }
     let payload = {
       userId: user.user_id,

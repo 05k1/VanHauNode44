@@ -9,6 +9,9 @@ import cookieParser from "cookie-parser";
 // tao doi tuong express
 const app = express();
 
+// define middleware de public  folder public
+app.use(express.static("."));
+
 app.use(
   cors({
     origin: "http://localhost:3000", // cap quyen cho frontend

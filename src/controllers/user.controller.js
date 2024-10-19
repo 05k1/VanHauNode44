@@ -111,4 +111,29 @@ const updateUser = async (req, res) => {
   }
 };
 
-export { createUser, getUsers, deleteUser, updateUser };
+const uploadAvatar = async (req, res) => {
+  try {
+    let file = req.file;
+    let userId = req.body.userId;
+    let user = await model.users.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    let avatarPath = `/public/imgs/${file.filename}`;
+    await model.users.update(
+      { avatar: avatarPath },
+      {
+        where: {
+          user_id: userId,
+        },
+      }
+    );
+    return res.status(200).json({ message: "upload avatar success" });
+  } catch (error) {
+    return res
+      .status(INTERNAL_SERVER)
+      .json({ message: "error api upload avatar" });
+  }
+};
+
+export { createUser, getUsers, deleteUser, updateUser, uploadAvatar };
