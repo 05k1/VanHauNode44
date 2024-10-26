@@ -41,21 +41,21 @@ const getUsers = async (req, res) => {
           [Op.like]: `%${full_name}%`,
         },
       },
-      attributes: ["full_name"],
-      include: [
-        {
-          model: model.video, // chon model muon ket ban
-          as: "videos",
-          attributes: ["video_name", "user_id"], // chi dinh truong nao se hien hti
-          required: true, // default se ket bang left join, muon inner join required: true
-          include: [
-            {
-              model: model.video_comment,
-              as: "video_comments",
-            },
-          ],
-        },
-      ],
+      // attributes: ["full_name"],
+      // include: [
+      //   {
+      //     model: model.video, // chon model muon ket ban
+      //     as: "videos",
+      //     attributes: ["video_name", "user_id"], // chi dinh truong nao se hien hti
+      //     required: true, // default se ket bang left join, muon inner join required: true
+      //     include: [
+      //       {
+      //         model: model.video_comment,
+      //         as: "video_comments",
+      //       },
+      //     ],
+      //   },
+      // ],
     });
     return res.status(OK).json(data);
   } catch (error) {
