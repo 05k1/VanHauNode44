@@ -9,8 +9,15 @@ import { plainToClass } from 'class-transformer';
 export class VideoService {
   prima = new PrismaClient();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  create(createVideoDto: CreateVideoDto) {
-    return 'This action adds a new video';
+  async create(createVideoDto: CreateVideoDto): Promise<VideoDto> {
+    try {
+      let newVideo = await this.prima.video.create({
+        data: createVideoDto,
+      });
+      return plainToClass(VideoDto, newVideo);
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 
   async findAll(
